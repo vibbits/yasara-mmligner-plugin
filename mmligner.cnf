@@ -1,0 +1,8 @@
+# This is the configuration file for the YASARA MMligner plugin
+# You can edit it manually or from YASARA with Analyze > Align > Configure plugin for the MMligner executable
+
+# absolute path of the precompiled mmligner program
+MMLIGNER_BIN = C:\Users\user\Documents\MobaXterm\home\mmligner64.exe
+
+# absolute path for the cache directory
+MMLIGNER_TMP = mmligner_cache
