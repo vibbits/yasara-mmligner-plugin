@@ -23,7 +23,7 @@ Installation:
 
 1. Download the binary of MMligner from http://lcb.infotech.monash.edu.au/mmligner/
 2. Save it in a folder of your choice
-3. Download the plugin and unzip it in the <yasara installation folder>/plg folder.
+3. Download the plugin and unzip it in the `yasara installation folder/plg` folder.
 4. Start YASARA
 5. Load any PDB file into YASARA
 6. Configure the MMligner plugin via Analyse > Align > Configure MMligner plugin
