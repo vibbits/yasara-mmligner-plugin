@@ -3,13 +3,11 @@
 # mmligneralign.py
 
 
-import yasara
-import string
 import disk
 import os
 from collections import namedtuple
 
-from python2to3 import *
+import yasara
 
 # Represents a yasara object being aligned
 YObject = namedtuple("YObject", ["filename", "num", "mols"])
@@ -21,8 +19,8 @@ def molecule(obj):
 
   if chainIDs == "":
     return obj.filename
-  else:
-    return obj.filename + ":" + chainIDs
+
+  return obj.filename + ":" + chainIDs
 
 def execute_mmligner(mmligner_bin, objects):
   """Execute MMLigner on provided inputs"""
@@ -49,8 +47,8 @@ def align_molecules(mmligner_bin, objects):
 
   try:
     newobj = yasara.LoadPDB(expected_result, center=None, correct=None)[0]
-  except: 
-    return "Yasara failed to load the MMLigner result"
+  except Exception as e:
+    return "Yasara failed to load the MMLigner result: {}".format(e)
 
   # transfer aligened PDB with original object
   yasara.TransferObj(newobj, objects[0].num, local="Match")

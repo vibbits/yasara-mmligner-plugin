@@ -29,11 +29,12 @@ MainMenu: Analyze
         Filename: *
       Request: FileLocations
 """
-#!/usr/bin/python
-import yasara,string,disk,os
-from mmligneralign import align_molecules, YObject
 
-from python2to3 import *
+import os
+import yasara
+import disk
+
+from mmligneralign import align_molecules, YObject
 
 
 ERROR_MESSAGE = """Cannot execute MMligner.
