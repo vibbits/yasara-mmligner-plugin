@@ -31,18 +31,37 @@ MainMenu: Analyze
 """
 #!/usr/bin/python
 import yasara,string,disk,os
-import mmaligneralign
-#import mmlignerutilities,mmlignerplotoutput
+from mmaligneralign import align_molecules, YObject
 
 from python2to3 import *
 
-# set non-calculation requests so we don't clean the cache folder after these. 
-noncalc = ['FileLocations']
-# redundant files that can be removed when saving FoldX output to new folder
-redundantfiles = ['PdbList_']
-# MMLigner absolute path
-mmligner_bin = ""
 
+ERROR_MESSAGE = """Cannot execute MMligner.
+ Make sure you have set the correct MMligner file
+ locations in Analyze > Align > Configure plugin.
+"""
+
+SUCCESS_MESSAGE = """
+Aligned PDB loaded in YASARA soup as Object {}.
+ You can save this PDB when the plugin procedure ends. Please wait ...
+"""
+
+
+def mmligner_cache(mmligner_tmp):
+  cache = os.path.join(os.getcwd(), mmligner_tmp)
+  if not os.path.isdir(cache):
+    disk.remove(cache)
+  if not os.path.exists(cache):
+    disk.makedirs(cache, yasara.permissions)
+
+  return cache
+
+def mmligner_exe(mmligner_path):
+  from subprocess import call
+
+  call(mmligner_path)
+
+  return mmligner_path
 
 def disabled_check():
   """ ASSIGN 1 TO yasara.plugin.exitcode IF THIS PLUGIN CANNOT WORK AND SHOULD
@@ -67,14 +86,19 @@ def file_locations():
         output.write(line)
 
 def run_mmligner():
-  # count molecules
-  molcount = yasara.selection[0].molecules + yasara.selection[1].molecules
+  """Run the mmligner program"""
+  import traceback
+  # show MMLigner message
+  citation = "Please cite Collier et al., Bioinformatics. 33(7):1005-1013."
+  yasara.ShowMessage("Running structural alignment with MMligner. "+citation)
 
   # make the list of molname selections
   # put all molecules from each selection in 1 string
-  mollist = [
-    "".join([molecule.name for molecule in yasara.selection[0].molecule]),
-    "".join([molecule.name for molecule in yasara.selection[1].molecule])
+  # molecules that are "empty" (e.g. " ") are ignored
+  # duplicates are discarded
+  mols = [
+    "".join(set([molecule.name.strip() for molecule in yasara.selection[0].molecule])),
+    "".join(set([molecule.name.strip() for molecule in yasara.selection[1].molecule]))
     ]
 
   # molecules should belong to same object
@@ -82,13 +106,39 @@ def run_mmligner():
                    yasara.selection[1].molecule[0].object.number.inyas]
 
   # set the cache dir from the config file
-  cachedir = os.path.join(os.getcwd(), yasara.plugin.config["MMLIGNER_TMP"])
+  cachedir = mmligner_cache(yasara.plugin.config["MMLIGNER_TMP"])
+
+  # set the cache dir from the config file
+  try:
+    mmligner_bin = mmligner_exe(yasara.plugin.config["MMLIGNER_BIN"])
+  except FileNotFoundError:
+    yasara.plugin.end(ERROR_MESSAGE)
+
+  # Prepare objects being aligned
+  objects = [YObject(os.path.join(cachedir, "Object{}.pdb".format(num)), num, mols[i])
+             for i, num in enumerate(objectnumbers)]
+  for pdbfilename, objnum, _ in objects:
+    yasara.SavePDB(objnum, pdbfilename)
 
   # run mmligner
-  newobjnumber = mmaligneralign.Align_Molecules(cachedir, mmligner_bin, mollist, objectnumbers)
+  cwd = os.getcwd()
+  os.chdir(cachedir)
+  newobj = align_molecules(mmligner_bin, objects)
+  os.chdir(cwd)
+
+  # Cleanup
+  disk.remove([os.path.join(cachedir, f) for f in os.listdir(cachedir)])
+  
+  # show LoadPDB message
+  if isinstance(newobj, str):
+    yasara.plugin.end(newobj)
+  else:
+    yasara.ShowMessage(SUCCESS_MESSAGE.format(newobj))
 
   # stop showing messages on screen        
   yasara.HideMessage()
+  yasara.Wait(5,"Seconds")
+    
 
 
 # Main program

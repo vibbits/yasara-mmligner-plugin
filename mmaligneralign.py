@@ -3,48 +3,61 @@
 # mmaligneralign.py
 
 
-import yasara,string,disk,os
+import yasara
+import string
+import disk
+import os
+from collections import namedtuple
+
 from python2to3 import *
 
-# residue conversion dictionnary
-aa_dict = {'ALA':'A','CYS':'C','ASP':'D','GLU':'E','PHE':'F','GLY':'G','HIS':'H','ILE':'I','LYS':'K','LEU':'L','MET':'M','ASN':'N','PRO':'P','GLN':'Q','ARG':'R','SER':'S','THR':'T','VAL':'V','TRP':'W','TYR':'Y','H1S':'H','H2S':'H'}
+# Represents a yasara object being aligned
+YObject = namedtuple("YObject", ["filename", "num", "mols"])
 
-# Align_Molecules
-# ==============
-def Align_Molecules(cachedir,foldxbin,mollist,objectnumbers):
-  # open list for pdb files
-  pdbfiles = []
-  # set pdb filename
-  for objnum in objectnumbers:
-      pdbfilename = "Object"+str(objnum)+".pdb"
-      pdbfiles.append(pdbfilename)
-      # save pdb
-      yasara.SavePDB(objnum,os.path.join(cachedir,pdbfilename))
-  # change to temp folder
-  os.chdir(cachedir)
-  # citation to MMligner
-  citation="Please cite Collier et al., Bioinformatics. 33(7):1005-1013."
-  # show BuildModel message
-  yasara.ShowMessage("Running structural alignment with MMligner. "+citation)
-  # build the MMligner command
-  mmlignercommand = foldxbin + " ./" + pdbfiles[0] + ":" + mollist[0] + " ./" + pdbfiles[1] + ":" + mollist[1] + " --superpose"
-  # run MMligner
-  print(mmlignercommand)
-  os.system(mmlignercommand)
+
+def molecule(obj):
+  """Convert a YObject into an argument for MMLigner"""
+  chainIDs = obj.mols.replace("_", "")
+
+  if chainIDs == "":
+    return obj.filename
+  else:
+    return obj.filename + ":" + chainIDs
+
+def execute_mmligner(mmligner_bin, objects):
+  """Execute MMLigner on provided inputs"""
+  import subprocess
+  mmlignercommand = [mmligner_bin,
+                     molecule(objects[0]),
+                     molecule(objects[1]),
+                     "--superpose"]
+
+  return subprocess.call(mmlignercommand)
+
+def align_molecules(mmligner_bin, objects):
+  """ Align Molecules with mmligner"""
+  assert len(objects) == 2, "MMLigner can only align pairs of structures"
+
+  # Expected output name
+  expected_result = objects[1].filename+"_superposed__1.pdb"
+
+  if 0 != execute_mmligner(mmligner_bin, objects):
+    return "MMLigner encountered an error"
+
+  if not disk.pathexists(expected_result):
+    return "MMLigner did not find any useful alignments for these objects"
+
   try:
-    print(os.path.join(cachedir,"Object"+str(objectnumbers[-1])+".pdb_superposed__1.pdb"))
-    newobjlist = yasara.LoadPDB(os.path.join(cachedir,"Object"+str(objectnumbers[-1])+".pdb_superposed__1.pdb"), center=None, correct=None)
+    newobj = yasara.LoadPDB(expected_result, center=None, correct=None)[0]
   except: 
-    yasara.plugin.end("Cannot read MMligner output. Make sure you have set the correct MMligner file locations in Analyze > Align > Configure plugin")
+    return "Yasara failed to load the MMLigner result"
+
   # transfer aligened PDB with original object
-  yasara.TransferObj(newobjlist[0],objectnumbers[0],local="Match")
+  yasara.TransferObj(newobj, objects[0].num, local="Match")
+
   # rename repaired object to RepairPDB
-  yasara.NameObj(newobjlist[0],"AlignedObj"+str(objectnumbers[-1]))
-  # show LoadPDB message of repaired structure
-  yasara.ShowMessage("Aligned PDB loaded in YASARA soup as Object "+str(newobjlist[0])+". You can save this PDB when the plugin procedure ends. Please wait ...")
-  # stop showing messages on screen        
-  yasara.HideMessage()
-  yasara.Wait(5,"Seconds")
+  yasara.NameObj(newobj, "AlignedObj{}".format(objects[1].num))
+
   # return the objectnumber of the aligned PDB
-  return newobjlist[0]
+  return newobj
   
