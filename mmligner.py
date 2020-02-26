@@ -55,8 +55,8 @@ def remember_cwd():
   curdir = os.getcwd()
   try:
     yield
-  except Exception:
-    pass
+  except Exception as e:
+    yasara.write("Error: {}".format(e))
 
   os.chdir(curdir)
 
