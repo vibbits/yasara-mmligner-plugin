@@ -67,7 +67,7 @@ if (yasara.request=="CheckIfDisabled"): yasara.plugin.exitcode=0
 elif (yasara.request=="FileLocations"):
   xbinpath = yasara.selection[0].filename[0]
   # stop if wrong rotabase file was selected (just by filename)
-  if not os.path.split(xbinpath)[-1] == 'mmligner64.exe':
+  if not os.path.split(xbinpath)[-1][:8] == 'mmligner':
     yasara.plugin.end("Invalid file. Download MMligner from http://lcb.infotech.monash.edu.au/mmligner/")
   lines = open("mmligner.cnf","r").readlines()
   output = open("mmligner.cnf","w")
