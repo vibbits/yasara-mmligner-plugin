@@ -20,7 +20,7 @@ def molecule(obj):
   if chainIDs == "":
     return obj.filename
 
-  return obj.filename + ":" + chainIDs
+  return os.path.basename(obj.filename) + ":" + chainIDs
 
 def execute_mmligner(mmligner_bin, objects):
   """Execute MMLigner on provided inputs"""
