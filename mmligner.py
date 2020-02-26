@@ -4,7 +4,7 @@
 # AUTHOR:      James Collier, Alexander Botzki. VIB
 # LICENSE:     GPL3 (www.gnu.org)
 # DESCRIPTION: This plugin provides access to the structural alignment software MMligner
-###########################################################################################################################
+#################################################################
 # This is a YASARA plugin to be placed in the /plg subdirectory #
 # Go to www.yasara.org/plugins for documentation and downloads  #
 #################################################################
@@ -31,6 +31,8 @@ MainMenu: Analyze
 """
 
 import os
+from contextlib import contextmanager
+
 import yasara
 import disk
 
@@ -48,6 +50,16 @@ Aligned PDB loaded in YASARA soup as Object {}.
 """
 
 
+@contextmanager
+def remember_cwd():
+  curdir = os.getcwd()
+  try:
+    yield
+  except Exception:
+    pass
+
+  os.chdir(curdir)
+
 def mmligner_cache(mmligner_tmp):
   cache = os.path.join(os.getcwd(), mmligner_tmp)
   if not os.path.isdir(cache):
@@ -60,7 +72,7 @@ def mmligner_cache(mmligner_tmp):
 def mmligner_exe(mmligner_path):
   from subprocess import call
 
-  call(mmligner_path)
+  call([mmligner_path])
 
   return mmligner_path
 
@@ -122,10 +134,10 @@ def run_mmligner():
     yasara.SavePDB(objnum, pdbfilename)
 
   # run mmligner
-  cwd = os.getcwd()
-  os.chdir(cachedir)
-  newobj = align_molecules(mmligner_bin, objects)
-  os.chdir(cwd)
+  newobj = None
+  with remember_cwd():
+    os.chdir(cachedir)
+    newobj = align_molecules(mmligner_bin, objects)
 
   # Cleanup
   disk.remove([os.path.join(cachedir, f) for f in os.listdir(cachedir)])
