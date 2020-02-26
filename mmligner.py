@@ -31,7 +31,7 @@ MainMenu: Analyze
 """
 #!/usr/bin/python
 import yasara,string,disk,os
-from mmaligneralign import align_molecules, YObject
+from mmligneralign import align_molecules, YObject
 
 from python2to3 import *
 

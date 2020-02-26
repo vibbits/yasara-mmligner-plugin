@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# mmaligneralign.py
+# mmligneralign.py
 
 
 import yasara
