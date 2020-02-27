@@ -4,6 +4,7 @@
 
 A plugin to enable the use of the MMLigner pairwise structural alignment program from within Yasara.
 Web address of the MMligner site to download the program: http://lcb.infotech.monash.edu.au/mmligner/
+
 Please cite the article when publishing results from this plugin:
 J. H. Collier,  L. Allison,  A. M. Lesk,  P. J. Stuckey,  M. Garcia de la Banda  &  A. S. Konagurthu 
 Statistical inference of protein structural alignments using information and compression
