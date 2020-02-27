@@ -1,3 +1,5 @@
+[![CodeFactor](https://www.codefactor.io/repository/github/vibbits/yasara-mmligner-plugin/badge/master)](https://www.codefactor.io/repository/github/vibbits/yasara-mmligner-plugin/overview/master)
+
 # yasara-mmligner-plugin
 
 Initial version of the yasara plugin of MMligner 
